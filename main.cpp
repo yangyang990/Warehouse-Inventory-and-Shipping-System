@@ -17,36 +17,92 @@ Member_3: 242UC24551 | LOW ZHENG HAO | LOW.ZHENG.HAO@student.mmu.edu.my | 013-88
 
 using namespace std;
 
-queue<string> order;     // First in, First Out
-stack<string> inventory; // Last in, First Out
-
 int main()
 {
+    queue<string> order;     // First in, First Out
+    stack<string> inventory; // Last in, First Out
+
     int choice;
+    string item;
 
     while (true)
     {
-        cout << " ****************************** " << endl;
-        cout << " ----MENU----" << endl;
+        cout << " ***************************************************** " << endl;
+        cout << " ----Warehouse Inventory and Shipping System----" << endl;
         cout << " 1. Add incoming item " << endl;
         cout << " 2. Process incoming item " << endl;
-        cout << " 3. Ship item " << endl;
-        cout << " 4. View last incoming item " << endl;
-        cout << " 5. View next shipment " << endl;
-        cout << " 6. Exit " << endl;
+        cout << " 3. Display all item in the cart " << endl;
+        cout << " 4. Ship item " << endl;
+        cout << " 5. View last incoming item " << endl;
+        cout << " 6. View next shipment " << endl;
+        cout << " 7. Exit " << endl;
         cout << endl;
-        cout << " ****************************** " << endl;
+        cout << " ***************************************************** " << endl;
         cout << endl;
         cout << "Enter your choice: ";
 
         cin >> choice;
+        cin.ignore(); // clear input buffer
 
         switch (choice)
         {
-        case 6:
+        case 1:
+            cout << "Enter item name: ";
+            getline(cin, item);
+            inventory.push(item);
+            cout << item << " added to inventory." << endl;
+            cout << endl;
+            break;
+
+        case 2:
+            // move from stack to queue
+            if (!inventory.empty())
+            {
+                item = inventory.top();
+                inventory.pop();  // remove from inventory
+                order.push(item); // add to order lsit
+                cout << "Processed " << item << " and added to shipping queue." << endl;
+                cout << endl;
+            }
+            else
+            {
+                cout << "No items in inventory to process!" << endl;
+                cout << endl;
+            }
+            break;
+
+        case 3:
+            if (!order.empty())
+            {
+                cout << "Items in cart: ";
+                queue<string> temp = order;
+                while (!temp.empty())
+                {
+                    cout << temp.front();
+                    temp.pop();
+                    if (!temp.empty())
+                    {
+                        cout << ", ";
+                    }
+                    cout << endl;
+                }
+                cout << endl;
+            }
+            else
+            {
+                cout << "Shipping cart is empty." << endl;
+                cout << endl;
+            }
+            break;
+
+        case 7:
             cout << "Exiting program...\n";
             cout << endl;
             return 0;
+
+        default:
+            cout << "Invalid choice! Please try again." << endl;
+            cout << endl;
         }
     }
     return 0;
