@@ -14,6 +14,8 @@ Member_3: 242UC24551 | LOW ZHENG HAO | LOW.ZHENG.HAO@student.mmu.edu.my | 013-88
 #include <string>
 #include <stack>
 #include <queue>
+#include <cctype>
+#include <limits>
 
 using namespace std;
 
@@ -42,7 +44,16 @@ int main()
         cout << "Enter your choice: ";
 
         cin >> choice;
-        cin.ignore(); // clear input buffer
+        if (cin.fail())
+        {
+            cin.clear();                                         // clear error state
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard invalid input
+            cout << "Invalid input! Please enter a number.\n";
+            cout << endl;
+            continue; // back to menu
+        }
+
+        cin.ignore(); // clear newline for getline abo will have error
 
         switch (choice)
         {
