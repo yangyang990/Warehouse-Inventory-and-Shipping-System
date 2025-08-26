@@ -59,10 +59,11 @@ int main()
             continue; // back to menu
         }
 
-        cin.ignore(); // clear newline for getline abo will have error
+        cin.ignore(); // removes the leftover newline character abo will have error
 
         switch (choice)
         {
+            // { } separate block scope prevent error
         case 1:
         {
             cout << "Enter item name: ";
