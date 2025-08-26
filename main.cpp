@@ -118,7 +118,7 @@ int main()
         }
 
         case 3:
-        { // Display all items in shipping cart
+        {
             if (!order.empty())
             {
                 cout << "Items in shipping cart:\n";
@@ -134,6 +134,49 @@ int main()
             else
             {
                 cout << "Shipping cart is empty.\n\n";
+            }
+            break;
+        }
+
+        case 4:
+        {
+            if (!order.empty())
+            {
+                Purchase p = order.front();
+                order.pop();
+                cout << "Shipping item: " << p.item << " (x" << p.quantity << ")\n\n";
+            }
+            else
+            {
+                cout << "No items to ship.\n\n";
+            }
+            break;
+        }
+
+        case 5:
+        {
+            if (!inventory.empty())
+            {
+                Purchase p = inventory.top();
+                cout << "Last incoming item: " << p.item << " (x" << p.quantity << ")\n\n";
+            }
+            else
+            {
+                cout << "No incoming items available.\n\n";
+            }
+            break;
+        }
+
+        case 6:
+        {
+            if (!order.empty())
+            {
+                Purchase p = order.front();
+                cout << "Next item to ship: " << p.item << " (x" << p.quantity << ")\n\n";
+            }
+            else
+            {
+                cout << "No shipments pending.\n\n";
             }
             break;
         }
