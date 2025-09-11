@@ -18,10 +18,39 @@ Member_3: 242UC24551 | LOW ZHENG HAO | LOW.ZHENG.HAO@student.mmu.edu.my | 013-88
 
 using namespace std;
 
+class Category
+{
+private:
+    int id;
+    string name;
+
+public:
+    Category(int id, const string &name) : id(id), name(name) {}
+    int getId() const { return id; }
+    string getName() const { return name; }
+};
+
+class Product
+{
+private:
+    int id;
+    string name;
+    double price;
+    Category category;
+
+public:
+    Product(int id, const string &name, double price, const Category &category) : id(id), name(name), price(price), category(category) {}
+    int getId() const { return id; }
+    string getName() const { return name; }
+    double getPrice() const { return price; }
+    Category getCategory() const { return category; }
+};
+
 struct Purchase
 {
     int quantity;
-    string item;
+    Product product;
+    Purchase(int q, const Product &p) : quantity(q), product(p) {}
 };
 
 int main()
@@ -30,8 +59,6 @@ int main()
     stack<Purchase> inventory; // Last in, First Out
 
     int choice;
-    int quantity;
-    string item;
 
     while (true)
     {
@@ -54,8 +81,7 @@ int main()
         {
             cin.clear();                                         // clear error state
             cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard invalid input
-            cout << "Invalid input! Please enter a number.\n";
-            cout << endl;
+            cout << "Invalid input! Please enter a number.\n\n";
             continue; // back to menu
         }
 
@@ -63,16 +89,25 @@ int main()
 
         switch (choice)
         {
-            // { } separate block scope prevent error
+        // { } separate block scope prevent error
         case 1:
         {
-            cout << "Enter item name: ";
-            getline(cin, item);
+            int id, catId, qty;
+            string name, catName;
+            double price;
 
+            cout << "Enter product ID: ";
+            cin >> id;
+            cin.ignore();
+
+            cout << "Enter product name: ";
+            getline(cin, name);
+
+            // Validation(int only are not allowed)
             bool isNumber = true;
-            for (char a : item)
+            for (char c : name)
             {
-                if (!isdigit(a))
+                if (!isdigit(c))
                 {
                     isNumber = false;
                     break;
@@ -80,36 +115,48 @@ int main()
             }
             if (isNumber)
             {
-                cout << "Item name cannot be only numbers!\n\n";
+                cout << "Product name cannot be only numbers!\n\n";
                 break;
             }
 
-            cout << "How many needed: ";
-            cin >> quantity;
-            if (cin.fail() || quantity <= 0)
+            cout << "Enter product price: ";
+            cin >> price;
+            cin.ignore();
+
+            cout << "Enter category ID: ";
+            cin >> catId;
+            cin.ignore();
+
+            cout << "Enter category name: ";
+            getline(cin, catName);
+
+            cout << "Enter quantity: ";
+            cin >> qty;
+            cin.ignore();
+
+            if (qty <= 0)
             {
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 cout << "Invalid quantity!\n\n";
                 break;
             }
-            cin.ignore();
 
-            inventory.push({quantity, item});
-            cout << quantity << "x " << item << " added to inventory.\n\n";
+            Category c(catId, catName);
+            Product p(id, name, price, c);
+            inventory.push(Purchase(qty, p));
+
+            cout << qty << "x " << name << " (RM" << price << ") added to inventory under category "
+                 << catName << ".\n\n";
             break;
         }
 
         case 2:
         {
-            // move from stack to queue
             if (!inventory.empty())
             {
-                Purchase p = inventory.top();
+                Purchase buy = inventory.top();
                 inventory.pop();
-                order.push(p);
-                cout << "Processed \"" << p.item << "\" (x" << p.quantity
-                     << ") and added to shipping queue.\n\n";
+                order.push(buy);
+                cout << "Processed \"" << buy.product.getName() << "\" (x" << buy.quantity << ") and added to shipping queue.\n\n";
             }
             else
             {
@@ -126,9 +173,9 @@ int main()
                 queue<Purchase> temp = order;
                 while (!temp.empty())
                 {
-                    Purchase p = temp.front();
+                    Purchase buy = temp.front();
                     temp.pop();
-                    cout << "- " << p.item << " (x" << p.quantity << ")\n";
+                    cout << "- " << buy.product.getName() << " (x" << buy.quantity << ", RM" << buy.product.getPrice() << ", Category: " << buy.product.getCategory().getName() << ")\n";
                 }
                 cout << endl;
             }
@@ -143,9 +190,11 @@ int main()
         {
             if (!order.empty())
             {
-                Purchase p = order.front();
+                Purchase buy = order.front();
                 order.pop();
-                cout << "Shipping item: " << p.item << " (x" << p.quantity << ")\n\n";
+                cout << "Shipping item: " << buy.product.getName()
+                     << " (x" << buy.quantity << ", RM" << buy.product.getPrice()
+                     << ", Category: " << buy.product.getCategory().getName() << ")\n\n";
             }
             else
             {
@@ -158,8 +207,8 @@ int main()
         {
             if (!inventory.empty())
             {
-                Purchase p = inventory.top();
-                cout << "Last incoming item: " << p.item << " (x" << p.quantity << ")\n\n";
+                Purchase buy = inventory.top();
+                cout << "Last incoming item: " << buy.product.getName() << " (x" << buy.quantity << ", RM" << buy.product.getPrice() << ", Category: " << buy.product.getCategory().getName() << ")\n\n";
             }
             else
             {
@@ -172,8 +221,10 @@ int main()
         {
             if (!order.empty())
             {
-                Purchase p = order.front();
-                cout << "Next item to ship: " << p.item << " (x" << p.quantity << ")\n\n";
+                Purchase pur = order.front();
+                cout << "Next item to ship: " << pur.product.getName()
+                     << " (x" << pur.quantity << ", RM" << pur.product.getPrice()
+                     << ", Category: " << pur.product.getCategory().getName() << ")\n\n";
             }
             else
             {
@@ -184,12 +235,10 @@ int main()
 
         case 7:
             cout << "Exiting program...\n\n";
-
             return 0;
 
         default:
-            cout << "Invalid choice! Please try again." << endl;
-            cout << endl;
+            cout << "Invalid choice! Please try again.\n\n";
         }
     }
     return 0;
