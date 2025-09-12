@@ -15,8 +15,120 @@ Member_3: 242UC24551 | LOW ZHENG HAO | LOW.ZHENG.HAO@student.mmu.edu.my | 013-88
 #include <stack>
 #include <queue>
 #include <limits>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
+
+template <typename T>
+class MyStack
+{
+private:
+    struct Node
+    {
+        T data;
+        Node *next;
+        Node(const T &d) : data(d), next(nullptr) {}
+    };
+    Node *topNode;
+
+public:
+    MyStack() : topNode(nullptr) {}
+
+    ~MyStack()
+    {
+        while (!empty())
+            pop();
+    }
+
+    void push(const T &value)
+    {
+        Node *newNode = new Node(value);
+        newNode->next = topNode;
+        topNode = newNode;
+    }
+
+    void pop()
+    {
+        if (!empty())
+        {
+            Node *temp = topNode;
+            topNode = topNode->next;
+            delete temp;
+        }
+    }
+
+    T &top()
+    {
+        return topNode->data;
+    }
+
+    bool empty() const
+    {
+        return topNode == nullptr;
+    }
+
+    // For iteration (copy stack without modifying original)
+    Node *getTopNode() const { return topNode; }
+};
+
+template <typename T>
+class MyQueue
+{
+private:
+    struct Node
+    {
+        T data;
+        Node *next;
+        Node(const T &d) : data(d), next(nullptr) {}
+    };
+    Node *frontNode;
+    Node *rearNode;
+
+public:
+    MyQueue() : frontNode(nullptr), rearNode(nullptr) {}
+
+    ~MyQueue()
+    {
+        while (!empty())
+            pop();
+    }
+
+    void push(const T &value)
+    {
+        Node *newNode = new Node(value);
+        if (rearNode)
+            rearNode->next = newNode;
+        else
+            frontNode = newNode;
+        rearNode = newNode;
+    }
+
+    void pop()
+    {
+        if (!empty())
+        {
+            Node *temp = frontNode;
+            frontNode = frontNode->next;
+            if (!frontNode)
+                rearNode = nullptr;
+            delete temp;
+        }
+    }
+
+    T &front()
+    {
+        return frontNode->data;
+    }
+
+    bool empty() const
+    {
+        return frontNode == nullptr;
+    }
+
+    // For iteration (copy queue without modifying original)
+    Node *getFrontNode() const { return frontNode; }
+};
 
 class Category
 {
@@ -25,7 +137,7 @@ private:
     string name;
 
 public:
-    Category(int id, const string &name) : id(id), name(name) {}
+    Category(int id = 0, const string &name = "") : id(id), name(name) {}
     int getId() const { return id; }
     string getName() const { return name; }
 };
@@ -39,7 +151,8 @@ private:
     Category category;
 
 public:
-    Product(int id, const string &name, double price, const Category &category) : id(id), name(name), price(price), category(category) {}
+    Product(int id = 0, const string &name = "", double price = 0, const Category &category = Category())
+        : id(id), name(name), price(price), category(category) {}
     int getId() const { return id; }
     string getName() const { return name; }
     double getPrice() const { return price; }
@@ -53,10 +166,130 @@ struct Purchase
     Purchase(int q, const Product &p) : quantity(q), product(p) {}
 };
 
+void saveInventory(MyStack<Purchase> &inventory)
+{
+    ofstream outFile("inventory.txt");
+    if (!outFile)
+    {
+        cout << "Error saving inventory!\n";
+        return;
+    }
+
+    // Traverse manually
+    auto node = inventory.getTopNode();
+    while (node)
+    {
+        Purchase p = node->data;
+        outFile << p.product.getId() << ","
+                << p.product.getName() << ","
+                << p.product.getPrice() << ","
+                << p.product.getCategory().getId() << ","
+                << p.product.getCategory().getName() << ","
+                << p.quantity << "\n";
+        node = node->next;
+    }
+    outFile.close();
+}
+
+void saveOrders(MyQueue<Purchase> &order)
+{
+    ofstream outFile("orders.txt");
+    if (!outFile)
+    {
+        cout << "Error saving orders!\n";
+        return;
+    }
+
+    auto node = order.getFrontNode();
+    while (node)
+    {
+        Purchase p = node->data;
+        outFile << p.product.getId() << ","
+                << p.product.getName() << ","
+                << p.product.getPrice() << ","
+                << p.product.getCategory().getId() << ","
+                << p.product.getCategory().getName() << ","
+                << p.quantity << "\n";
+        node = node->next;
+    }
+    outFile.close();
+}
+
+void loadInventory(MyStack<Purchase> &inventory)
+{
+    ifstream inFile("inventory.txt");
+    if (!inFile)
+        return;
+
+    string line;
+    while (getline(inFile, line))
+    {
+        stringstream ss(line);
+        string token;
+
+        int id, catId, qty;
+        string name, catName;
+        double price;
+
+        getline(ss, token, ',');
+        id = stoi(token);
+        getline(ss, name, ',');
+        getline(ss, token, ',');
+        price = stod(token);
+        getline(ss, token, ',');
+        catId = stoi(token);
+        getline(ss, catName, ',');
+        getline(ss, token, ',');
+        qty = stoi(token);
+
+        Category c(catId, catName);
+        Product p(id, name, price, c);
+        inventory.push(Purchase(qty, p));
+    }
+    inFile.close();
+}
+
+void loadOrders(MyQueue<Purchase> &order)
+{
+    ifstream inFile("orders.txt");
+    if (!inFile)
+        return;
+
+    string line;
+    while (getline(inFile, line))
+    {
+        stringstream ss(line);
+        string token;
+
+        int id, catId, qty;
+        string name, catName;
+        double price;
+
+        getline(ss, token, ',');
+        id = stoi(token);
+        getline(ss, name, ',');
+        getline(ss, token, ',');
+        price = stod(token);
+        getline(ss, token, ',');
+        catId = stoi(token);
+        getline(ss, catName, ',');
+        getline(ss, token, ',');
+        qty = stoi(token);
+
+        Category c(catId, catName);
+        Product p(id, name, price, c);
+        order.push(Purchase(qty, p));
+    }
+    inFile.close();
+}
+
 int main()
 {
-    queue<Purchase> order;     // First in, First Out
-    stack<Purchase> inventory; // Last in, First Out
+    MyQueue<Purchase> order;     // FIFO
+    MyStack<Purchase> inventory; // LIFO
+
+    loadInventory(inventory);
+    loadOrders(order);
 
     int choice;
 
@@ -66,30 +299,26 @@ int main()
         cout << " ----Warehouse Inventory and Shipping System----" << endl;
         cout << " 1. Add incoming item " << endl;
         cout << " 2. Process incoming item " << endl;
-        cout << " 3. Display all item in the cart " << endl;
+        cout << " 3. Display all items " << endl;
         cout << " 4. Ship item " << endl;
         cout << " 5. View last incoming item " << endl;
         cout << " 6. View next shipment " << endl;
         cout << " 7. Exit " << endl;
-        cout << endl;
         cout << " ***************************************************** " << endl;
-        cout << endl;
         cout << "Enter your choice: ";
 
         cin >> choice;
         if (cin.fail())
         {
-            cin.clear();                                         // clear error state
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard invalid input
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Invalid input! Please enter a number.\n\n";
-            continue; // back to menu
+            continue;
         }
-
-        cin.ignore(); // removes the leftover newline character abo will have error
+        cin.ignore();
 
         switch (choice)
         {
-        // { } separate block scope prevent error
         case 1:
         {
             int id, catId, qty;
@@ -99,11 +328,10 @@ int main()
             cout << "Enter product ID: ";
             cin >> id;
             cin.ignore();
-
             cout << "Enter product name: ";
             getline(cin, name);
 
-            // Validation(int only are not allowed)
+            // Validation (reject only numbers)
             bool isNumber = true;
             for (char c : name)
             {
@@ -122,14 +350,11 @@ int main()
             cout << "Enter product price: ";
             cin >> price;
             cin.ignore();
-
             cout << "Enter category ID: ";
             cin >> catId;
             cin.ignore();
-
             cout << "Enter category name: ";
             getline(cin, catName);
-
             cout << "Enter quantity: ";
             cin >> qty;
             cin.ignore();
@@ -143,9 +368,10 @@ int main()
             Category c(catId, catName);
             Product p(id, name, price, c);
             inventory.push(Purchase(qty, p));
+            saveInventory(inventory);
+            saveOrders(order);
 
-            cout << qty << "x " << name << " (RM" << price << ") added to inventory under category "
-                 << catName << ".\n\n";
+            cout << qty << "x " << name << " (RM" << price << ") added to inventory under category " << catName << ".\n\n";
             break;
         }
 
@@ -162,27 +388,41 @@ int main()
             {
                 cout << "No items in inventory to process!\n\n";
             }
+            saveInventory(inventory);
+            saveOrders(order);
             break;
         }
 
         case 3:
         {
-            if (!order.empty())
+            cout << "Items in Inventory:\n";
+            auto node = inventory.getTopNode();
+            if (!node)
+                cout << "Inventory is empty.\n";
+            while (node)
             {
-                cout << "Items in shipping cart:\n";
-                queue<Purchase> temp = order;
-                while (!temp.empty())
-                {
-                    Purchase buy = temp.front();
-                    temp.pop();
-                    cout << "- " << buy.product.getName() << " (x" << buy.quantity << ", RM" << buy.product.getPrice() << ", Category: " << buy.product.getCategory().getName() << ")\n";
-                }
-                cout << endl;
+                Purchase buy = node->data;
+                cout << "- " << buy.product.getName()
+                     << " (x" << buy.quantity
+                     << ", RM" << buy.product.getPrice()
+                     << ", Category: " << buy.product.getCategory().getName() << ")\n";
+                node = node->next;
             }
-            else
+
+            cout << "\nItems in Shipping Cart:\n";
+            auto qnode = order.getFrontNode();
+            if (!qnode)
+                cout << "Shipping cart is empty.\n";
+            while (qnode)
             {
-                cout << "Shipping cart is empty.\n\n";
+                Purchase buy = qnode->data;
+                cout << "- " << buy.product.getName()
+                     << " (x" << buy.quantity
+                     << ", RM" << buy.product.getPrice()
+                     << ", Category: " << buy.product.getCategory().getName() << ")\n";
+                qnode = qnode->next;
             }
+            cout << endl;
             break;
         }
 
@@ -193,13 +433,16 @@ int main()
                 Purchase buy = order.front();
                 order.pop();
                 cout << "Shipping item: " << buy.product.getName()
-                     << " (x" << buy.quantity << ", RM" << buy.product.getPrice()
+                     << " (x" << buy.quantity
+                     << ", RM" << buy.product.getPrice()
                      << ", Category: " << buy.product.getCategory().getName() << ")\n\n";
             }
             else
             {
                 cout << "No items to ship.\n\n";
             }
+            saveInventory(inventory);
+            saveOrders(order);
             break;
         }
 
@@ -208,7 +451,10 @@ int main()
             if (!inventory.empty())
             {
                 Purchase buy = inventory.top();
-                cout << "Last incoming item: " << buy.product.getName() << " (x" << buy.quantity << ", RM" << buy.product.getPrice() << ", Category: " << buy.product.getCategory().getName() << ")\n\n";
+                cout << "Last incoming item: " << buy.product.getName()
+                     << " (x" << buy.quantity
+                     << ", RM" << buy.product.getPrice()
+                     << ", Category: " << buy.product.getCategory().getName() << ")\n\n";
             }
             else
             {
@@ -223,7 +469,8 @@ int main()
             {
                 Purchase pur = order.front();
                 cout << "Next item to ship: " << pur.product.getName()
-                     << " (x" << pur.quantity << ", RM" << pur.product.getPrice()
+                     << " (x" << pur.quantity
+                     << ", RM" << pur.product.getPrice()
                      << ", Category: " << pur.product.getCategory().getName() << ")\n\n";
             }
             else
